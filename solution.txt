@@ -1,0 +1,78 @@
+PART 1: FIX THE DATABASE
+I have fixed the database by connecting to psql periodic_table DB.
+so let's start from the start.
+
+# connect to DB 
+>psql --username=freecodecamp --dbname=periodic_table
+
+# Rename weight column to atomic_mass, melting_point column to melting_point_celsius and boiling_point column to boiling_point_celsius
+> ALTER TABLE properties RENAME COLUMN weight TO atomic_mass;
+> ALTER TABLE properties RENAME COLUMN melting_point melting_point_celsius;
+> ALTER TABLE properties RENAME COLUMN boiling_point boiling_point_celsius;
+
+# melting_point_celsius and boiling_point_celsius columns should not accept null values
+> ALTER TABLE properties ALTER COLUMN melting_point_celsius SET NOT NULL;
+> ALTER TABLE properties ALTER COLUMN boiling_point_celsius SET NOT NULL;
+
+# add the UNIQUE constraint to the symbol and name columns from the elements table
+> ALTER TABLE elements ADD UNIQUE(symbol);
+> ALTER TABLE elements ADD UNIQUE(name);
+
+# symbol and name columns should have the NOT NULL constraint
+> ALTER TABLE elements ALTER COLUMN symbol SET NOT NULL;
+> ALTER TABLE elements ALTER COLUMN name SET NOT NULL;
+
+# set the atomic_number column from the properties table as a foreign key that references the column of the same name in the elements table
+> ALTER TABLE properties ADD FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number);
+
+# create a types table
+> CREATE TABLE types(type_id INT PRIMARY KEY, type VARCHAR(50) NOT NULL);
+# Next steps related to types table
+> INSERT INTO types(type_id, type) VALUES(1,'metal');
+> INSERT INTO types(type_id, type) VALUES(2,'nonmetal');
+> INSERT INTO types(type_id, type) VALUES(3,'metalloid');
+> ALTER TABLE properties ADD COLUMN type_id INT NOT NULL REFERENCES types(type_id); # when creating new type not null column in properties table below error you might see.
+ERROR:  column "type_id" contains null values
+to fix this firs create column with null values like below.
+> ALTER TABLE properties ADD COLUMN type_id INT;
+Then make a reference
+> ALTER TABLE properties ADD FOREIGN KEY(type_id) REFERENCES types(type_id);
+While update properties type_id column do not use INSERT, use UPDATE otherwise face an error
+> UPDATE properties SET type_id=1 WHERE type='metal';
+> UPDATE properties SET type_id=2 WHERE type='nonmetal';
+> UPDATE properties SET type_id=3 WHERE type='metalloid';
+And now the the type_id column as NOT NULL
+> ALTER TABLE properties ALTER COLUMN type_id SET NOT NULL;
+
+# capitalize the first letter of all the symbol values in the elements table. 
+> UPDATE elements SET symbol = UPPER(symbol);
+
+# remove all the trailing zeros after the decimals from each row of the atomic_mass column.
+> ALTER TABLE properties ALTER COLUMN atomic_mass TYPE REAL;
+
+# Add Fluorine element in DB
+> INSERT INTO elements(atomic_number,symbol,name) VALUES(9,'F','Fluorine');
+> INSERT INTO properties(atomic_number, type, atomic_mass, melting_point_celsius, boiling_point_celsius, type_id) VALUES(9,'nonmetal',18.998,-220,-188.1,2);
+
+# Add Neon element in DB
+> INSERT INTO elements(atomic_number,symbol,name) VALUES(10,'Ne','Neon'); 
+> INSERT INTO properties(atomic_number, type, atomic_mass, melting_point_celsius, boiling_point_celsius, type_id) VALUES(10,'nonmetal',20.18,-248.6,-246.1,2);
+
+----------------------------------------------------------------------------------------------
+
+PART 2: Create your git repository
+#  create a periodic_table folder in the project folder and turn it into a git repository with git init
+Make sure you do it in new terminal not psql terminal
+> mkdir periodic_table
+> cd periodic_table
+> git init
+> git checkout -b main
+
+# Creating a element.sh file
+> touch element.sh
+# make it executible
+> chmod +x element.sh
+
+------------------------------------------------------------------------------------------------
+
+PART 3: THE SCRIPT (element.sh)
